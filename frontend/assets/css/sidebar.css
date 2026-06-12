@@ -1,0 +1,172 @@
+:root {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --border-color: rgba(255,255,255,0.05);
+    --hover-bg: rgba(255,255,255,0.05);
+    --accent: #3b82f6;
+    --dot-color: #3b82f6;
+    --dot-glow: rgba(59, 130, 246, 0.4);
+    --input-bg: #0f172a;
+    --card-bg: #1e293b;
+}
+
+.sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--bg-primary);
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+}
+
+.sidebar .logo-side {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    margin-bottom: 40px;
+    padding-left: 12px;
+    color: var(--text-primary);
+}
+
+.sidebar nav { flex: 1; }
+
+.sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.sidebar nav a:hover {
+    background: var(--hover-bg);
+    color: var(--text-primary);
+}
+
+.sidebar nav a.active {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* TITIK NYALA */
+.sidebar nav a.active::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    background: var(--dot-color);
+    box-shadow: 0 0 8px var(--dot-glow);
+    border-radius: 50%;
+}
+
+.sidebar nav a.active {
+    padding-left: 28px; /* Shift text for the dot */
+}
+
+
+/* LIGHT MODE - HANYA TEKS */
+.sidebar .toggle-light {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: auto;
+    transition: background 0.2s, color 0.2s;
+}
+
+.sidebar .toggle-light:hover {
+    background: var(--hover-bg);
+    color: var(--text-primary);
+}
+
+.sidebar .user-profile {
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.sidebar .user-profile .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.sidebar .user-profile .info { font-size: 13px; }
+.sidebar .user-profile .info .name { font-weight: 600; color: var(--text-primary); }
+.sidebar .user-profile .info .role { color: var(--text-secondary); font-size: 12px; margin-top: 2px;}
+.sidebar .user-profile .info .id { display: none; } /* Hide ID to clean up as per reference */
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        min-width: 100%;
+        height: auto;
+        flex-direction: row;
+        padding: 16px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        align-items: center;
+    }
+    .sidebar nav {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .sidebar nav a {
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        margin-bottom: 0;
+    }
+    .sidebar nav a.active {
+        padding-left: 14px;
+    }
+    .sidebar nav a.active::before {
+        display: none;
+    }
+    .sidebar .user-profile {
+        display: none;
+    }
+    .sidebar .toggle-light {
+        margin-top: 0;
+        padding: 10px 14px;
+    }
+    .sidebar .logo-side {
+        margin-bottom: 0;
+        margin-right: 16px;
+        padding-left: 0;
+    }
+}
