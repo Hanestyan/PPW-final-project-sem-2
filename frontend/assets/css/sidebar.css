@@ -1,16 +1,16 @@
 :root {
-    --bg-primary: #0f172a;
-    --bg-secondary: #1e293b;
-    --bg-tertiary: #334155;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
+    --bg-primary: #0B0F19; /* Very dark blue body */
+    --bg-secondary: #151A24; /* Card background */
+    --bg-tertiary: #1E293B; /* Slightly lighter card/hover */
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
     --border-color: rgba(255,255,255,0.05);
-    --hover-bg: rgba(255,255,255,0.05);
-    --accent: #3b82f6;
-    --dot-color: #3b82f6;
-    --dot-glow: rgba(59, 130, 246, 0.4);
-    --input-bg: #0f172a;
-    --card-bg: #1e293b;
+    --hover-bg: rgba(255,255,255,0.02);
+    --accent: #2563EB;
+    --dot-color: #F8FAFC; /* White dot in active item */
+    --dot-glow: rgba(255, 255, 255, 0.3);
+    --input-bg: #0B0F19;
+    --card-bg: #151A24;
 }
 
 .sidebar {
@@ -23,25 +23,25 @@
     height: 100vh;
     position: sticky;
     top: 0;
+    /* No border right, smooth transition into content */
 }
 
 .sidebar .logo-side {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     letter-spacing: 4px;
-    margin-bottom: 40px;
+    margin-bottom: 48px;
     padding-left: 12px;
     color: var(--text-primary);
 }
 
-.sidebar nav { flex: 1; }
+.sidebar nav { flex: 1; display: flex; flex-direction: column; gap: 8px;}
 
 .sidebar nav a {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px;
-    margin-bottom: 8px;
+    padding: 12px 16px;
     color: var(--text-secondary);
     text-decoration: none;
     border-radius: 12px;
@@ -65,27 +65,27 @@
 .sidebar nav a.active::before {
     content: '';
     position: absolute;
-    left: 12px;
+    left: 8px;
     top: 50%;
     transform: translateY(-50%);
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
     background: var(--dot-color);
     box-shadow: 0 0 8px var(--dot-glow);
     border-radius: 50%;
 }
 
 .sidebar nav a.active {
-    padding-left: 28px; /* Shift text for the dot */
+    padding-left: 24px; /* Shift text for the dot */
 }
 
 
-/* LIGHT MODE - HANYA TEKS */
+/* LIGHT MODE */
 .sidebar .toggle-light {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px;
+    padding: 12px 16px;
     color: var(--text-secondary);
     cursor: pointer;
     border-radius: 12px;
@@ -93,6 +93,12 @@
     font-weight: 500;
     margin-top: auto;
     transition: background 0.2s, color 0.2s;
+    margin-bottom: 16px;
+}
+
+.sidebar .toggle-light::before {
+    content: '☀'; /* simple sun icon */
+    font-size: 16px;
 }
 
 .sidebar .toggle-light:hover {
@@ -101,33 +107,30 @@
 }
 
 .sidebar .user-profile {
-    margin-top: 24px;
-    padding: 16px;
-    background: var(--bg-secondary);
-    border-radius: 16px;
     display: flex;
     align-items: center;
     gap: 12px;
-    border: 1px solid var(--border-color);
+    padding: 12px 16px;
 }
 
 .sidebar .user-profile .avatar {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    background: var(--bg-tertiary);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    font-size: 14px;
-    color: var(--text-primary);
+    font-size: 12px;
+    color: var(--text-secondary);
 }
 
 .sidebar .user-profile .info { font-size: 13px; }
 .sidebar .user-profile .info .name { font-weight: 600; color: var(--text-primary); }
-.sidebar .user-profile .info .role { color: var(--text-secondary); font-size: 12px; margin-top: 2px;}
-.sidebar .user-profile .info .id { display: none; } /* Hide ID to clean up as per reference */
+.sidebar .user-profile .info .role { display: none; } 
+.sidebar .user-profile .info .id { color: var(--text-secondary); font-size: 11px; margin-top: 2px; display: block;}
 
 @media (max-width: 768px) {
     .sidebar {
@@ -142,6 +145,7 @@
     }
     .sidebar nav {
         display: flex;
+        flex-direction: row;
         gap: 8px;
         flex-wrap: wrap;
     }
@@ -162,6 +166,7 @@
     }
     .sidebar .toggle-light {
         margin-top: 0;
+        margin-bottom: 0;
         padding: 10px 14px;
     }
     .sidebar .logo-side {

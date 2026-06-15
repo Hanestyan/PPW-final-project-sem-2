@@ -1,9 +1,22 @@
 <?php
-// views/satpam/history_satpam.php
+// ===================================================
+// history_satpam.php - Halaman Riwayat Laporan (Satpam)
+// Menampilkan semua laporan dari semua mahasiswa
+// ===================================================
+
+session_start();
+
+// Cek apakah user sudah login sebagai satpam atau admin
+if (!isset($_SESSION['id_user']) || !in_array($_SESSION['role'], ['satpam', 'admin'])) {
+    header("Location: ../../../frontend/index.php");
+    exit();
+}
+
+// Include controller — mengambil semua data laporan dari database
 require_once '../../../backend/controllers/dashadmin.php';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,30 +26,30 @@ require_once '../../../backend/controllers/dashadmin.php';
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         :root {
-            --bg-primary: #0f172a; --bg-secondary: #1e293b; --bg-tertiary: #334155;
-            --text-primary: #f8fafc; --text-secondary: #94a3b8; --border-color: rgba(255,255,255,0.05);
-            --hover-bg: rgba(255,255,255,0.05); --input-bg: #0f172a; --accent: #3b82f6; --accent-hover: #2563eb;
-            --btn-primary: #2563eb; --success: #22c55e; --warning: #eab308; --danger: #ef4444;
-            --shadow: rgba(0,0,0,0.5); --card-bg: #1e293b;
+            --bg-primary: #0B0F19; --bg-secondary: #151A24; --bg-tertiary: #1E293B;
+            --text-primary: #F8FAFC; --text-secondary: #94A3B8; --border-color: rgba(255,255,255,0.05);
+            --hover-bg: rgba(255,255,255,0.02); --input-bg: #0B0F19; --accent: #2563EB; --accent-hover: #1D4ED8;
+            --btn-primary: #1D4ED8; --success: #22c55e; --warning: #eab308; --danger: #ef4444;
+            --shadow: rgba(0,0,0,0.5); --card-bg: #151A24;
         }
         body { background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; display: flex; }
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 32px 40px; background: var(--bg-primary); }
 
         .top-header-panel {
-            background: var(--card-bg); border-radius: 16px; padding: 20px 24px;
+            background: var(--card-bg); border-radius: 20px; padding: 20px 32px;
             display: flex; justify-content: space-between; align-items: center;
             border: 1px solid var(--border-color); margin-bottom: 32px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
         }
         .top-header-panel .header-title { font-size: 18px; font-weight: 600; color: var(--text-primary); }
-        .top-header-panel .header-right { display: flex; align-items: center; gap: 24px; }
-        .top-header-panel .time { font-size: 20px; font-weight: 500; color: var(--text-primary); }
-        .top-header-panel .time span { font-size: 13px; color: var(--text-secondary); font-weight: 400; margin-left: 8px;}
-        .top-header-panel .status { font-size: 13px; padding: 6px 14px; border-radius: 20px; background: rgba(34, 197, 94, 0.1); color: var(--success); border: 1px solid rgba(34, 197, 94, 0.2); display: flex; align-items: center; gap: 8px; font-weight: 500;}
+        .top-header-panel .header-right { display: flex; align-items: center; gap: 32px; }
+        .top-header-panel .time { font-size: 24px; font-weight: 500; color: var(--text-primary); letter-spacing: 1px;}
+        .top-header-panel .time span { font-size: 12px; color: var(--text-secondary); font-weight: 500; margin-left: 8px; text-transform: uppercase; letter-spacing: 1px;}
+        .top-header-panel .status { font-size: 12px; padding: 8px 16px; border-radius: 20px; background: rgba(255, 255, 255, 0.05); color: var(--text-primary); border: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; font-weight: 500;}
         .top-header-panel .status .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 8px var(--success); }
 
-        .history-container { background: var(--card-bg); border-radius: 16px; padding: 24px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-        
+        .history-container { background: var(--card-bg); border-radius: 24px; padding: 32px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); }
+
         .history-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
         .history-header-row h2 { font-size: 18px; font-weight: 600; margin: 0; color: var(--text-primary); }
         .filter-group { display: flex; gap: 8px; }
@@ -48,23 +61,36 @@ require_once '../../../backend/controllers/dashadmin.php';
             background: var(--bg-primary); border-radius: 12px; padding: 16px 20px;
             border: 1px solid var(--border-color); margin-bottom: 12px;
             display: flex; justify-content: space-between; align-items: center;
-            transition: all 0.2s; 
+            transition: all 0.2s;
         }
         .history-card:hover { border-color: var(--text-secondary); }
         .history-card .left { display: flex; align-items: center; gap: 16px; }
-        .history-card .left .icon-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;}
-        .history-card .left .icon-circle.success { background: rgba(34, 197, 94, 0.1); color: var(--success); border: 1px solid rgba(34, 197, 94, 0.2);}
-        .history-card .left .icon-circle.warning { background: rgba(234, 179, 8, 0.1); color: var(--warning); border: 1px solid rgba(234, 179, 8, 0.2);}
-        .history-card .left .icon-circle.pending { background: rgba(59, 130, 246, 0.1); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.2);}
-        .history-card .left .info { display: flex; flex-direction: column; gap: 4px; }
-        .history-card .left .title { font-weight: 600; font-size: 15px; color: var(--text-primary); }
-        .history-card .left .meta { font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
-        .history-card .left .meta span { display: flex; align-items: center; gap: 4px; }
+        .icon-circle {
+            width: 48px; height: 48px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; font-weight: 600; flex-shrink: 0;
+        }
+        .icon-circle.success { color: var(--success); background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); }
+        .icon-circle.pending { color: var(--accent); background: rgba(59, 130, 246, 0.1);  border: 1px solid rgba(59, 130, 246, 0.2); }
+        .icon-circle.warning { color: var(--warning); background: rgba(234, 179, 8, 0.1);  border: 1px solid rgba(234, 179, 8, 0.2); }
 
-        .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid transparent; }
-        .badge-selesai { background: rgba(34, 197, 94, 0.1); color: var(--success); border-color: rgba(34, 197, 94, 0.2); }
-        .badge-diproses { background: rgba(59, 130, 246, 0.1); color: var(--accent); border-color: rgba(59, 130, 246, 0.2); }
-        .badge-pending { background: rgba(234, 179, 8, 0.1); color: var(--warning); border-color: rgba(234, 179, 8, 0.2); }
+        .history-card .left .info .title { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .history-card .left .info .title h4 { font-weight: 600; font-size: 16px; color: var(--text-primary); margin: 0; }
+        .history-card .left .info .meta { font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-top: 0; }
+        
+        .history-card .right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
+        .badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid transparent; }
+        .badge-selesai  { color: var(--success); border-color: rgba(34, 197, 94, 0.2); background: transparent; }
+        .badge-diproses { color: var(--accent);  border-color: rgba(59, 130, 246, 0.2); background: transparent; }
+        .badge-pending  { color: var(--warning); border-color: rgba(234, 179, 8, 0.2); background: transparent; }
+
+        .urgency-badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
+        .urgency-rendah { background: rgba(34, 197, 94, 0.1); color: var(--success); border: 1px solid rgba(34, 197, 94, 0.2); }
+        .urgency-sedang { background: rgba(234, 179, 8, 0.1); color: var(--warning); border: 1px solid rgba(234, 179, 8, 0.2); }
+        .urgency-tinggi { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
+
+        .history-card-hidden { display: none; }
 
         .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--bg-tertiary); color: var(--text-primary); padding: 12px 24px; border-radius: 10px; font-size: 14px; box-shadow: 0 4px 20px var(--shadow); border: 1px solid var(--border-color); z-index: 9999; animation: slideUp 0.3s ease; max-width: 90vw; text-align: center; display: none; }
         .toast.show { display: block; }
@@ -89,10 +115,10 @@ require_once '../../../backend/controllers/dashadmin.php';
         </nav>
         <div class="toggle-light">Light Mode</div>
         <div class="user-profile">
-            <div class="avatar" id="avatarInitials">AS</div>
+            <div class="avatar"><?php echo strtoupper(substr($_SESSION['username'], 0, 2)); ?></div>
             <div class="info">
-                <div class="name" id="sidebarName">Admin Satpam</div>
-                <div class="role">ID: 9482-X</div>
+                <div class="name"><?php echo htmlspecialchars($_SESSION['username']); ?></div>
+                <div class="role">Satpam</div>
             </div>
         </div>
     </aside>
@@ -100,9 +126,9 @@ require_once '../../../backend/controllers/dashadmin.php';
     <!-- MAIN CONTENT -->
     <main class="main-content">
         <div class="top-header-panel">
-            <div class="header-title">Report History</div>
+            <div class="header-title">Riwayat Laporan</div>
             <div class="header-right">
-                <div class="time" id="clock">20:32 <span>SUN, JUN 7</span></div>
+                <div class="time" id="clock">--:-- <span>---, --- -</span></div>
                 <div class="status">
                     <span class="dot"></span> System Status: Secure
                 </div>
@@ -111,57 +137,76 @@ require_once '../../../backend/controllers/dashadmin.php';
 
         <div class="history-container">
             <div class="history-header-row">
-                <h2>Riwayat Laporan</h2>
+                <h2>Semua Riwayat Laporan</h2>
+                <!-- Tombol filter — dikendalikan oleh JavaScript di bawah -->
                 <div class="filter-group">
-                    <button class="btn-filter active">Semua</button>
-                    <button class="btn-filter">Pending</button>
-                    <button class="btn-filter">Selesai</button>
+                    <button class="btn-filter active" data-filter="semua">Semua</button>
+                    <button class="btn-filter" data-filter="Pending">Pending</button>
+                    <button class="btn-filter" data-filter="Diproses">Diproses</button>
+                    <button class="btn-filter" data-filter="Selesai">Selesai</button>
                 </div>
             </div>
-            
+
             <?php foreach ($data_laporan as $row): ?>
-            <?php 
+                <?php
+                // Tentukan class berdasarkan status
+                // Kolom: status (sesuai gambar database)
                 $status = $row['status'];
-                $badgeClass = '';
-                $iconClass = '';
-                $iconSvg = '';
-                if($status == 'Selesai') {
-                    $badgeClass = 'badge-selesai';
-                    $iconClass = 'success';
-                    $iconSvg = '&#10003;'; // Checkmark
-                } elseif($status == 'Diproses') {
-                    $badgeClass = 'badge-diproses';
-                    $iconClass = 'pending';
-                    $iconSvg = '&#8987;'; // Hourglass/Clock
+                if ($status === 'Selesai') {
+                    $badge_class = 'badge-selesai';
+                    $icon_class  = 'success';
+                    $icon_text   = '✓';
+                } elseif ($status === 'Diproses') {
+                    $badge_class = 'badge-diproses';
+                    $icon_class  = 'pending';
+                    $icon_text   = '⏳';
                 } else {
-                    $badgeClass = 'badge-pending';
-                    $iconClass = 'warning';
-                    $iconSvg = '!'; // Exclamation
+                    $badge_class = 'badge-pending';
+                    $icon_class  = 'warning';
+                    $icon_text   = '!';
                 }
-            ?>
-            <div class="history-card">
-                <div class="left">
-                    <div class="icon-circle <?php echo $iconClass; ?>">
-                        <?php echo $iconSvg; ?>
-                    </div>
-                    <div class="info">
-                        <div class="title"><?php echo htmlspecialchars($row['deskripsi']); ?></div>
-                        <div class="meta">
-                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> <?php echo htmlspecialchars($row['lokasi']); ?></span>
-                            <span>&bull;</span>
-                            <span><?php echo date('d M Y, H:i', strtotime($row['created_at'])); ?></span>
+                ?>
+                <!-- data-status digunakan oleh JS untuk filter -->
+                <div class="history-card" data-status="<?php echo $status; ?>">
+                    <div class="left">
+                        <div class="icon-circle <?php echo $icon_class; ?>">
+                            <?php echo $icon_text; ?>
+                        </div>
+                        <div class="info">
+                            <div class="title">
+                                <h4><?php echo htmlspecialchars($row['deskripsi']); ?></h4>
+                                <?php
+                                    $urgensi_class = 'urgency-sedang';
+                                    if($row['tingkat_urgensi'] === 'Tinggi') $urgensi_class = 'urgency-tinggi';
+                                    elseif($row['tingkat_urgensi'] === 'Rendah') $urgensi_class = 'urgency-rendah';
+                                ?>
+                                <span class="urgency-badge <?php echo $urgensi_class; ?>">
+                                    <?php echo htmlspecialchars($row['tingkat_urgensi']); ?>
+                                </span>
+                            </div>
+                            <div class="meta">
+                                <span>📍 <?php echo htmlspecialchars($row['lokasi']); ?></span>
+                                <span>•</span>
+                                <span><?php echo date('d M Y, H:i', strtotime($row['created_at'])); ?></span>
+                            </div>
+                            <?php if (!empty($row['foto'])): ?>
+                                <div style="margin-top: 12px; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                                    <img src="../../uploads/<?php echo htmlspecialchars($row['foto']); ?>" alt="Foto Bukti" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </div>
+                    <div class="right">
+                        <span class="badge <?php echo $badge_class; ?>"><?php echo $status; ?></span>
+                    </div>
                 </div>
-
-                <div class="right">
-                    <span class="badge <?php echo $badgeClass; ?>">
-                        <?php echo $status; ?>
-                    </span>
-                </div>
-            </div>
             <?php endforeach; ?>
 
+            <?php if (empty($data_laporan)): ?>
+                <p style="text-align: center; color: var(--text-secondary); padding: 40px;">
+                    Belum ada riwayat laporan.
+                </p>
+            <?php endif; ?>
         </div>
     </main>
 
@@ -171,65 +216,51 @@ require_once '../../../backend/controllers/dashadmin.php';
         function updateClock() {
             const clockEl = document.getElementById('clock');
             if (!clockEl) return;
-            const now = new Date();
-            const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const dayName = days[now.getDay()];
-            const day = now.getDate();
+            const now    = new Date();
+            const days   = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
             const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-            const month = months[now.getMonth()];
-            const timeStr = hours + ':' + minutes;
-            const dateStr = dayName + ', ' + month + ' ' + day;
-            clockEl.innerHTML = timeStr + ' <span>' + dateStr + '</span>';
+            const jam    = String(now.getHours()).padStart(2, '0');
+            const menit  = String(now.getMinutes()).padStart(2, '0');
+            clockEl.innerHTML = jam + ':' + menit + ' <span>' + days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate() + '</span>';
         }
         updateClock();
         setInterval(updateClock, 1000);
 
-        function loadUser() {
-            let user = localStorage.getItem('safewalk_user');
-            if (!user) user = sessionStorage.getItem('safewalk_user');
-            if (user) {
-                try {
-                    const data = JSON.parse(user);
-                    document.getElementById('sidebarName').textContent = data.name;
-                    document.getElementById('avatarInitials').textContent = data.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                } catch(e) {}
-            }
-        }
-        loadUser();
+        // Filter kartu riwayat berdasarkan status
+        document.querySelectorAll('.btn-filter').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                // Tandai tombol yang aktif
+                document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
 
-        // TOGGLE LIGHT MODE
+                const filter = this.getAttribute('data-filter'); // 'semua', 'Pending', 'Diproses', 'Selesai'
+
+                // Tampilkan atau sembunyikan kartu sesuai filter
+                document.querySelectorAll('.history-card').forEach(function(card) {
+                    if (filter === 'semua' || card.getAttribute('data-status') === filter) {
+                        card.style.display = 'flex'; // Tampilkan
+                    } else {
+                        card.style.display = 'none'; // Sembunyikan
+                    }
+                });
+            });
+        });
+
         document.querySelector('.toggle-light').addEventListener('click', function() {
-            const root = document.documentElement.style;
-            const isLight = root.getPropertyValue('--bg-primary') === '#f6f8fa';
-            
+            const root    = document.documentElement.style;
+            const isLight = root.getPropertyValue('--bg-primary') === '#f8fafc';
             if (!isLight) {
-                root.setProperty('--bg-primary', '#f8fafc');
-                root.setProperty('--bg-secondary', '#ffffff');
-                root.setProperty('--bg-tertiary', '#f1f5f9');
-                root.setProperty('--text-primary', '#0f172a');
-                root.setProperty('--text-secondary', '#64748b');
-                root.setProperty('--border-color', 'rgba(0,0,0,0.1)');
-                root.setProperty('--hover-bg', 'rgba(0,0,0,0.05)');
-                root.setProperty('--input-bg', '#ffffff');
-                root.setProperty('--card-bg', '#ffffff');
-                root.setProperty('--dot-color', '#2563eb');
-                root.setProperty('--dot-glow', 'rgba(37, 99, 235, 0.4)');
-                this.textContent = 'Dark Mode';
+                root.setProperty('--bg-primary', '#f8fafc'); root.setProperty('--bg-secondary', '#ffffff');
+                root.setProperty('--bg-tertiary', '#f1f5f9'); root.setProperty('--text-primary', '#0f172a');
+                root.setProperty('--text-secondary', '#64748b'); root.setProperty('--border-color', 'rgba(0,0,0,0.1)');
+                root.setProperty('--hover-bg', 'rgba(0,0,0,0.05)'); root.setProperty('--card-bg', '#ffffff');
+                this.innerHTML = '☀ Dark Mode';
             } else {
-                root.setProperty('--bg-primary', '#0f172a');
-                root.setProperty('--bg-secondary', '#1e293b');
-                root.setProperty('--bg-tertiary', '#334155');
-                root.setProperty('--text-primary', '#f8fafc');
-                root.setProperty('--text-secondary', '#94a3b8');
-                root.setProperty('--border-color', 'rgba(255,255,255,0.05)');
-                root.setProperty('--hover-bg', 'rgba(255,255,255,0.05)');
-                root.setProperty('--input-bg', '#0f172a');
-                root.setProperty('--card-bg', '#1e293b');
-                root.setProperty('--dot-color', '#3b82f6');
-                root.setProperty('--dot-glow', 'rgba(59, 130, 246, 0.4)');
-                this.textContent = 'Light Mode';
+                root.setProperty('--bg-primary', '#0B0F19'); root.setProperty('--bg-secondary', '#151A24');
+                root.setProperty('--bg-tertiary', '#1E293B'); root.setProperty('--text-primary', '#F8FAFC');
+                root.setProperty('--text-secondary', '#94A3B8'); root.setProperty('--border-color', 'rgba(255,255,255,0.05)');
+                root.setProperty('--hover-bg', 'rgba(255,255,255,0.02)'); root.setProperty('--card-bg', '#151A24');
+                this.innerHTML = '☀ Light Mode';
             }
         });
 

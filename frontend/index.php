@@ -1,8 +1,29 @@
 <?php
-// index.php - Login Page
+// ===================================================
+// index.php - Halaman Login SafeWalk
+// ===================================================
+
+// Mulai session untuk mengecek status login
+session_start();
+
+// Jika sudah login, langsung arahkan ke dashboard yang sesuai
+if (isset($_SESSION['id_user'])) {
+    if ($_SESSION['role'] === 'satpam' || $_SESSION['role'] === 'admin') {
+        header("Location: views/satpam/dashboard_satpam.php");
+    } else {
+        header("Location: views/mahasiswa/dashboard_user.php");
+    }
+    exit();
+}
+
+// Ambil pesan error dari URL jika ada (dikirim dari loginprocess.php)
+$pesan_error = '';
+if (isset($_GET['error']) && $_GET['error'] === 'salah_password') {
+    $pesan_error = 'Username atau password salah. Silakan coba lagi.';
+}
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,28 +33,86 @@
 </head>
 <body>
     <div class="wrapper">
-        <!-- BANNER SAFEWALK (PISAH, LEBAR SAMA) -->
+        <!-- Banner SAFEWALK -->
         <div class="banner-safewalk">SAFEWALK</div>
 
-        <!-- LOGIN CARD -->
+        <!-- Form Login -->
         <div class="login-container">
             <h2>Login</h2>
-            <form action="backend/controllers/loginprocess.php" method="POST" id="loginForm">
-                <div class="form-group">
-                    <label for="nama">Nama</label>
-                    <input type="text" id="nama" placeholder="Contoh: Aries" required autocomplete="off">
-                    <div class="error-text" id="namaError">Please enter your name</div>
+
+            <!-- Tampilkan pesan error jika ada -->
+            <?php if ($pesan_error): ?>
+                <div class="error-alert" style="
+                    background: rgba(239, 68, 68, 0.1);
+                    border: 1px solid rgba(239, 68, 68, 0.3);
+                    color: #ef4444;
+                    padding: 10px 14px;
+                    border-radius: 8px;
+                    font-size: 13px;
+                    margin-bottom: 16px;
+                ">
+                    <?php echo htmlspecialchars($pesan_error); ?>
                 </div>
+            <?php endif; ?>
+
+            <!--
+                PENTING: action mengarah ke loginprocess.php
+                method="POST" agar data dikirim via POST
+            -->
+            <form action="../backend/controllers/loginprocess.php" method="POST" id="loginForm">
+
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <!--
+                        name="username" wajib ada agar PHP bisa membaca $_POST['username']
+                        value diisi otomatis jika "Remember Me" aktif
+                    -->
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="Masukkan username"
+                        value="<?php echo isset($_COOKIE['remember_username']) ? htmlspecialchars($_COOKIE['remember_username']) : ''; ?>"
+                        required
+                        autocomplete="off"
+                    >
+                    <div class="error-text" id="usernameError">Username tidak boleh kosong</div>
+                </div>
+
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" required autocomplete="off">
-                    <div class="error-text" id="passError">Password must be at least 3 characters</div>
+                    <!-- name="password" wajib ada agar PHP bisa membaca $_POST['password'] -->
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Masukkan password"
+                        required
+                        autocomplete="off"
+                    >
+                    <div class="error-text" id="passError">Password minimal 3 karakter</div>
                 </div>
+
                 <div class="remember">
-                    <input type="checkbox" id="remember">
+                    <!--
+                        name="remember_me" wajib ada agar PHP bisa cek $_POST['remember_me']
+                        checked jika cookie remember_username ada
+                    -->
+                    <input
+                        type="checkbox"
+                        id="remember"
+                        name="remember_me"
+                        <?php echo isset($_COOKIE['remember_username']) ? 'checked' : ''; ?>
+                    >
                     <label for="remember">Remember Me</label>
                 </div>
-                <button type="submit" class="btn-login">Login</button>
+
+                <!--
+                    name="login" wajib ada agar PHP bisa cek isset($_POST['login'])
+                -->
+                <div class="btn-wrapper">
+                    <button type="submit" name="login" class="btn-login">Login</button>
+                </div>
             </form>
         </div>
     </div>
@@ -41,61 +120,38 @@
     <div class="toast" id="toast"></div>
 
     <script>
+        // Validasi form sebelum dikirim ke server
         document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const nama = document.getElementById('nama').value.trim();
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
-            const remember = document.getElementById('remember').checked;
             let valid = true;
 
+            // Sembunyikan semua pesan error dulu
             document.querySelectorAll('.error-text').forEach(el => el.style.display = 'none');
 
-            if (!nama) {
-                document.getElementById('namaError').style.display = 'block';
+            // Cek username tidak kosong
+            if (!username) {
+                document.getElementById('usernameError').style.display = 'block';
                 valid = false;
             }
-            
+
+            // Cek password minimal 3 karakter
             if (!password || password.length < 3) {
                 document.getElementById('passError').style.display = 'block';
                 valid = false;
             }
 
-            if (!valid) return;
-
-            const userData = {
-                name: nama,
-                role: 'Student',
-                email: nama.toLowerCase().replace(/\s+/g, '.') + '@safewalk.edu'
-            };
-
-            if (remember) {
-                localStorage.setItem('safewalk_user', JSON.stringify(userData));
-                localStorage.setItem('safewalk_remembered', nama);
-            } else {
-                sessionStorage.setItem('safewalk_user', JSON.stringify(userData));
-                localStorage.removeItem('safewalk_remembered');
+            // Jika ada error, batalkan pengiriman form
+            if (!valid) {
+                e.preventDefault();
+                return;
             }
 
-            showToast('Welcome, ' + nama + '! Redirecting...');
-            
-            setTimeout(() => {
-                window.location.href = 'views/mahasiswa/dashboard_user.php';
-            }, 1200);
+            // Jika valid, form akan dikirim ke backend/controllers/loginprocess.php
+            // (tidak perlu e.preventDefault() — biarkan form submit normal)
         });
 
-        const rememberedName = localStorage.getItem('safewalk_remembered');
-        if (rememberedName) {
-            document.getElementById('nama').value = rememberedName;
-            document.getElementById('remember').checked = true;
-        }
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
-            }
-        });
-
+        // Fungsi toast notification
         function showToast(message, duration = 3000) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
